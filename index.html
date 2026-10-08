@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kotter Quest · Sesión 12 · UNICEBA</title>
+<style>
+  :root{
+    --uniceba-blue:#003366;
+    --uniceba-blue-light:#004d99;
+    --uniceba-gold:#c8a951;
+    --uniceba-accent:#1a5276;
+    --white:#ffffff;
+    --light-bg:#f0f3f7;
+    --card-bg:#ffffff;
+    --text:#1a1a2e;
+    --text-light:#555;
+    --correct:#27ae60;
+    --incorrect:#e74c3c;
+    --shadow:0 4px 20px rgba(0,0,0,0.08);
+    --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{overflow-x:hidden;max-width:100%;}
+  body{
+    font-family:Calibri,'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:linear-gradient(135deg,#e8edf3 0%,#dce3ed 30%,#eef1f6 60%,#e3e8f0 100%);
+    min-height:100vh;color:var(--text);overflow-x:hidden;position:relative;
+  }
+  body::before{
+    content:'';position:fixed;top:-200px;right:-200px;width:600px;height:600px;
+    background:radial-gradient(circle,rgba(0,51,102,0.04) 0%,transparent 70%);
+    border-radius:50%;pointer-events:none;z-index:0;
+  }
+  body::after{
+    content:'';position:fixed;bottom:-150px;left:-150px;width:500px;height:500px;
+    background:radial-gradient(circle,rgba(200,169,81,0.05) 0%,transparent 70%);
+    border-radius:50%;pointer-events:none;z-index:0;
+  }
+  .header{
+    background:var(--uniceba-blue);color:var(--white);
+    padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,0.15);
+    position:relative;z-index:10;
+  }
+  .header-left{display:flex;align-items:center;gap:14px;}
+  .header-logo{
+    width:44px;height:44px;background:var(--white);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:18px;color:var(--uniceba-blue);letter-spacing:-1px;flex-shrink:0;
+  }
+  .header h1{font-size:20px;font-weight:700;letter-spacing:-0.3px;}
+  .header span{font-size:12px;opacity:0.8;font-weight:300;display:block;}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .chip{
+    background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);
+    padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;
+  }
+  .chip.gold{background:rgba(200,169,81,0.22);border-color:rgba(200,169,81,0.45);}
+  .chip.btn{cursor:pointer;transition:background .2s;}
+  .chip.btn:hover{background:rgba(255,255,255,0.28);}
+
+  .wrap{max-width:820px;margin:0 auto;padding:24px 18px 10px;position:relative;z-index:5;}
+
+  .progress-wrap{margin-bottom:18px;}
+  .progress-top{display:flex;justify-content:space-between;font-size:12px;color:var(--text-light);
+    text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:7px;}
+  .progress-track{height:10px;background:#dbe2ea;border-radius:20px;overflow:hidden;}
+  .progress-fill{height:100%;width:0%;border-radius:20px;
+    background:linear-gradient(90deg,var(--uniceba-blue),var(--uniceba-blue-light));
+    transition:width .4s ease;}
+
+  .panel{
+    background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:24px;border:1px solid rgba(0,0,0,0.06);
+  }
+
+  .step-badge{
+    display:inline-block;background:var(--uniceba-gold);color:#3a2e0a;
+    font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+    padding:5px 14px;border-radius:20px;margin-bottom:14px;
+  }
+  .step-title{font-size:22px;font-weight:800;color:var(--uniceba-blue);margin-bottom:16px;line-height:1.25;}
+
+  .scenario{
+    background:linear-gradient(135deg,#f4f7fb,#e9eef5);
+    border-left:6px solid var(--uniceba-blue);border-radius:10px;
+    padding:16px 18px;font-size:16px;line-height:1.5;color:#2a2a3a;margin-bottom:22px;
+  }
+  .scenario .who{display:block;font-size:12px;text-transform:uppercase;letter-spacing:1px;
+    font-weight:800;color:var(--uniceba-accent);margin-bottom:6px;}
+
+  .q-label{font-size:13px;font-weight:700;color:var(--text-light);
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+
+  .options{display:flex;flex-direction:column;gap:12px;}
+  .option{
+    text-align:left;font-family:inherit;font-size:15.5px;line-height:1.45;font-weight:600;
+    color:var(--uniceba-blue);background:#eef2f8;border:2px solid #d7e0ec;
+    border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .2s ease;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .option .letter{
+    flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--uniceba-blue);
+    color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;
+    justify-content:center;transition:background .2s;
+  }
+  .option span{flex:1;overflow-wrap:break-word;}
+  .option:hover:not(:disabled){background:var(--uniceba-blue);color:#fff;border-color:var(--uniceba-blue);
+    transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,51,102,0.22);}
+  .option:hover:not(:disabled) .letter{background:var(--uniceba-gold);color:#3a2e0a;}
+  .option:disabled{cursor:default;}
+  .option.correct-answer{background:#e5f6ec;border-color:var(--correct);color:#14532d;}
+  .option.correct-answer .letter{background:var(--correct);}
+  .option.wrong-pick{background:#fdeaea;border-color:var(--incorrect);color:#7a1c14;}
+  .option.wrong-pick .letter{background:var(--incorrect);}
+  .option.faded{opacity:0.55;}
+
+  .feedback{margin-top:20px;border-radius:10px;padding:16px 18px;font-size:15px;line-height:1.5;
+    display:none;animation:slideUp .3s ease;}
+  .feedback.show{display:block;}
+  .feedback.ok{background:#e5f6ec;border-left:6px solid var(--correct);color:#14532d;}
+  .feedback.bad{background:#fdeaea;border-left:6px solid var(--incorrect);color:#7a1c14;}
+  .feedback b{display:block;font-size:16px;margin-bottom:5px;}
+
+  .actions{margin-top:22px;display:flex;justify-content:flex-end;}
+  .btn{
+    padding:14px 34px;border:none;border-radius:30px;font-size:16px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:all .25s;letter-spacing:0.3px;
+  }
+  .btn-primary{background:var(--uniceba-blue);color:#fff;}
+  .btn-primary:hover{background:var(--uniceba-blue-light);transform:translateY(-1px);
+    box-shadow:0 6px 20px rgba(0,51,102,0.25);}
+  .btn-ghost{background:transparent;color:var(--uniceba-blue);border:2px solid var(--uniceba-blue);}
+  .btn-ghost:hover{background:var(--uniceba-blue);color:#fff;}
+
+  /* Inicio */
+  .intro h2{font-size:24px;color:var(--uniceba-blue);margin-bottom:12px;font-weight:800;}
+  .intro p{font-size:16px;line-height:1.55;color:#333;margin-bottom:14px;}
+  .intro ul{list-style:none;margin:10px 0 20px;display:flex;flex-direction:column;gap:9px;}
+  .intro li{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:#333;line-height:1.4;}
+  .intro li .ic{color:var(--uniceba-gold);font-weight:900;flex-shrink:0;}
+  .intro .tag{display:inline-block;background:#eef2f8;color:var(--uniceba-accent);
+    font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:20px;margin:2px 6px 2px 0;}
+
+  /* Resultados */
+  .results-head{text-align:center;margin-bottom:18px;}
+  .trophy{font-size:60px;line-height:1;margin-bottom:6px;}
+  .results-head h2{font-size:24px;color:var(--uniceba-blue);font-weight:800;margin-bottom:4px;}
+  .rank-pill{display:inline-block;padding:8px 20px;border-radius:30px;font-weight:800;
+    font-size:15px;letter-spacing:.5px;margin-top:8px;}
+  .score-big{font-size:42px;font-weight:900;color:var(--uniceba-blue);line-height:1;margin:14px 0 2px;}
+  .score-sub{font-size:13px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+  .recap{list-style:none;margin:22px 0;display:flex;flex-direction:column;gap:8px;}
+  .recap li{display:flex;align-items:center;gap:10px;background:var(--light-bg);
+    border-radius:8px;padding:10px 14px;font-size:14px;}
+  .recap li .mark{font-weight:900;font-size:16px;flex-shrink:0;}
+  .recap li .mark.ok{color:var(--correct);} .recap li .mark.bad{color:var(--incorrect);}
+  .recap li .num{font-weight:800;color:var(--uniceba-blue);flex-shrink:0;}
+  .result-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+  .footer{text-align:center;padding:16px 20px 20px;font-size:11px;color:#999;position:relative;z-index:5;}
+
+  @keyframes slideUp{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .fade{animation:fadeIn .35s ease;}
+
+  @media (max-width:860px){
+    .header{padding:12px 16px;}
+    .header h1{font-size:17px;}
+    .wrap{padding:16px 12px 6px;}
+    .panel{padding:18px 16px;}
+    .step-title{font-size:19px;}
+    .scenario{font-size:15px;}
+    .option{font-size:15px;padding:14px 15px;}
+    .score-big{font-size:36px;}
+  }
+  @media (max-width:420px){
+    .header-right .chip{font-size:12px;padding:5px 11px;}
+    .btn{padding:13px 24px;font-size:15px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">UN</div>
+    <div>
+      <h1>Kotter Quest</h1>
+      <span>Sesión 12 · Implementación de la estrategia</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="chip" id="scoreChip">Puntos: 0</div>
+    <div class="chip btn" id="musicBtn">🎵 Música</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span>Avance de la ejecución</span>
+      <span id="progressLabel">Paso 0 de 8</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <section class="panel" id="stage"></section>
+</main>
+
+<footer class="footer">UNICEBA · Licenciatura en Negocios Internacionales · Planeación Estratégica · Ing. Rodolfo Ramírez</footer>
+
+<script>
+const STEPS = [
+  {
+    step: 1,
+    title: "Crear un sentido de urgencia",
+    who: "Escenario · Comité directivo",
+    scenario: "La empresa ya formuló su estrategia de transformación digital, pero las áreas siguen trabajando “como siempre”. Una parte del comité piensa que no hay prisa por cambiar.",
+    options: [
+      { t: "Enviar el nuevo plan por correo y esperar que todos lo lean por su cuenta.", correct:false,
+        fb: "Anunciar el plan no crea urgencia. Kotter insiste en hacer visible el riesgo de NO cambiar." },
+      { t: "Mostrar datos duros: la competencia digital crece 30% y se está perdiendo mercado; explicar por qué seguir igual es lo realmente riesgoso.", correct:true,
+        fb: "Correcto. La urgencia se construye con evidencia del entorno y del costo de la inacción, no con un correo." },
+      { t: "Avisar que habrá recortes de sueldo si la estrategia no avanza.", correct:false,
+        fb: "El miedo no genera compromiso; genera resistencia (miedo a perder lo conocido)." }
+    ]
+  },
+  {
+    step: 2,
+    title: "Formar una coalición guía con poder e influencia",
+    who: "Escenario · Sala de juntas",
+    scenario: "Necesitas un grupo que impulse el cambio y sea creíble para toda la organización. Hay líderes respetados en operaciones, ventas y sistemas que aún no están involucrados.",
+    options: [
+      { t: "Integrar solo a tus colaboradores de mayor confianza.", correct:false,
+        fb: "Una coalición débil y sin diversidad de poder pierde credibilidad y no arrastra al resto." },
+      { t: "Reunir a líderes clave de distintas áreas, con influencia y prestigio, para que encabecen el esfuerzo.", correct:true,
+        fb: "Correcto. La coalición guía debe tener poder, credibilidad y representación de las áreas clave." },
+      { t: "Dejar que cada gerencia decida por su lado cómo participar.", correct:false,
+        fb: "Sin un equipo guía común, las áreas reman en direcciones distintas: desalineación." }
+    ]
+  },
+  {
+    step: 3,
+    title: "Construir una visión clara y una estrategia",
+    who: "Escenario · Taller de liderazgo",
+    scenario: "El equipo guía quiere explicar a dónde va la empresa y cómo llegará ahí, de forma que cualquiera pueda entenderlo y recordarlo.",
+    options: [
+      { t: "Redactar una visión breve y concreta que responda a dónde vamos y cómo, con la estrategia detrás.", correct:true,
+        fb: "Correcto. Visión + estrategia claras son la brújula que alinea los esfuerzos de todos." },
+      { t: "Tomar una visión genérica de internet: “ser líderes innovadores y sostenibles”.", correct:false,
+        fb: "Una visión genérica no orienta decisiones ni motiva: no dice a dónde vamos ni qué dejaremos de hacer." },
+      { t: "No fijar visión todavía; “ver hacia dónde salen las cosas”.", correct:false,
+        fb: "Sin visión, la ejecución se vuelve improvisación y los equipos pierden rumbo." }
+    ]
+  },
+  {
+    step: 4,
+    title: "Comunicar la visión por todos los canales",
+    who: "Escenario · Toda la organización",
+    scenario: "Ya existe la visión. Ahora hay que lograr que las personas la entiendan y la sientan propia en su trabajo diario.",
+    options: [
+      { t: "Presentarla una sola vez en la junta anual y confiar en la cadena de mando.", correct:false,
+        fb: "Kotter estima que se necesita transmitir el mensaje muchas veces: una sola comunicación no basta." },
+      { t: "Repetir el mensaje por múltiples canales (reuniones, correo, carteles) en lenguaje claro, dando el ejemplo desde los líderes.", correct:true,
+        fb: "Correcto. Comunicación repetida, clara y congruente con las conductas de los líderes (los líderes son el mensaje)." },
+      { t: "Guardar la visión en un documento interno por si alguien la pregunta.", correct:false,
+        fb: "Guardar la estrategia en un cajón es la receta para la brecha entre estrategia y ejecución." }
+    ]
+  },
+  {
+    step: 5,
+    title: "Empoderar a las personas y eliminar barreras",
+    who: "Escenario · Operaciones",
+    scenario: "Los equipos quieren avanzar, pero se topan con procesos viejos, sistemas rígidos y un esquema de bonos que sigue premiando “lo de siempre”.",
+    options: [
+      { t: "Pedir a los equipos que “se esfuercen más” sin cambiar procesos ni incentivos.", correct:false,
+        fb: "Si discurso y incentivos se contradicen, gana lo de siempre: hay que alinear los sistemas (modelo 7S)." },
+      { t: "Rediseñar procesos e incentivos para que el cambio sea posible, y dar autonomía real a los equipos.", correct:true,
+        fb: "Correcto. Empoderar implica quitar barreras reales: procesos, sistemas, estructura e incentivos alineados." },
+      { t: "Centralizar todas las decisiones para “controlar” el cambio.", correct:false,
+        fb: "Quitar autonomía desmoviliza al equipo y contradice el liderazgo distribuido." }
+    ]
+  },
+  {
+    step: 6,
+    title: "Generar victorias de corto plazo",
+    who: "Escenario · Primer trimestre",
+    scenario: "El esfuerzo lleva semanas y algunos equipos empiezan a dudar de que “esto sirva”. Necesitas demostrar que el cambio funciona.",
+    options: [
+      { t: "Esperar dos años a ver resultados completos antes de comunicar cualquier avance.", correct:false,
+        fb: "Sin resultados visibles pronto, el ánimo se debilita y crece la fatiga de cambio." },
+      { t: "Lanzar un piloto en un área y comunicar logros medibles y concretos para motivar al resto.", correct:true,
+        fb: "Correcto. Las victorias tempranas dan evidencia y energía; son el paso 6 de Kotter." },
+      { t: "Ignorar los avances pequeños: “apenas estamos empezando”.", correct:false,
+        fb: "No reconocer avances quita refuerzo positivo y desmotiva al equipo." }
+    ]
+  },
+  {
+    step: 7,
+    title: "Consolidar y producir más cambio",
+    who: "Escenario · Después del piloto",
+    scenario: "El piloto fue un éxito y hay presión de tiempo. Algunos sugieren declarar “misión cumplida” y regresar a la rutina anterior.",
+    options: [
+      { t: "Declarar la victoria tras el primer piloto y detener la transformación.", correct:false,
+        fb: "Declarar victoria antes de tiempo es el error clásico del paso 7: el cambio se revierte." },
+      { t: "Usar la credibilidad ganada para transformar más áreas, sin declarar victoria antes de tiempo.", correct:true,
+        fb: "Correcto. Se consolida con más cambio y proyectos sucesivos hasta cubrir la estrategia completa." },
+      { t: "Volver al proceso anterior en cuanto aparece la primera presión operativa.", correct:false,
+        fb: "Recular ante la presión hace que el cambio no se estabilice (fracaso del “recongelar” de Lewin)." }
+    ]
+  },
+  {
+    step: 8,
+    title: "Anclar los nuevos enfoques en la cultura",
+    who: "Escenario · Largo plazo",
+    scenario: "La transformación ya dio resultados. El reto final es que no dependa del entusiasmo del momento y se vuelva “la forma normal de trabajar”.",
+    options: [
+      { t: "Anclar las nuevas conductas en la cultura: seleccionar, promover y reforzar a quienes actúan alineados.", correct:true,
+        fb: "Correcto. El ancla cultural (paso 8) hace que el cambio sobreviva sin depender del impulso inicial." },
+      { t: "Dejarlo escrito en un manual que casi nadie lee y dar el tema por cerrado.", correct:false,
+        fb: "La cultura vive en conductas y decisiones diarias, no en un manual guardado." },
+      { t: "Permitir que los líderes vuelvan a premiar “lo de siempre”, ahora que ya hay resultados.", correct:false,
+        fb: "Recompensar la conducta antigua deshace el anclaje: la cultura termina ganándole a la estrategia." }
+    ]
+  },
+  {
+    step: 9,
+    title: "Gestionar la resistencia (modelo ADKAR)",
+    who: "Escenario · Equipo con años en la empresa",
+    scenario: "Al anunciar el cambio, un grupo de colaboradores con trayectoria se muestra renuente: temen perder su forma de trabajar y no entienden el beneficio. Algunos ya comentan en pasillos que “esto no va a funcionar”.",
+    options: [
+      { t: "Ignorar la resistencia: “es normal y ya se les pasará” con el tiempo.", correct:false,
+        fb: "Ignorar la resistencia la vuelve subterránea y más difícil de gestionar; crece el rumor y la desconfianza." },
+      { t: "Amenazar con sanciones a quien no colabore con el cambio.", correct:false,
+        fb: "La presión no crea el Deseo de participar (la “D” de ADKAR); genera obediencia aparente, no compromiso." },
+      { t: "Escuchar sus preocupaciones, explicar el por qué del cambio y ofrecer capacitación y acompañamiento en la transición.", correct:true,
+        fb: "Correcto. ADKAR: Conciencia y Deseo se construyen con comunicación abierta y escucha activa; luego Conocimiento y Habilidad con capacitación." }
+    ]
+  },
+  {
+    step: 10,
+    title: "Medir y dar seguimiento a la ejecución (BSC y OKR)",
+    who: "Escenario · Comité de seguimiento",
+    scenario: "El plan ya está en marcha y varios frentes avanzan a la vez. Para no perder el rumbo, el comité necesita una forma objetiva de monitorear el avance y corregir a tiempo.",
+    options: [
+      { t: "Confiar en la intuición de los directivos y evaluar los resultados hasta el cierre del año.", correct:false,
+        fb: "Sin indicadores ni revisión periódica, las desviaciones se detectan demasiado tarde para corregirse." },
+      { t: "Definir indicadores en las cuatro perspectivas (financiera, cliente, procesos y personas) y revisarlos periódicamente con OKR.", correct:true,
+        fb: "Correcto. “No se puede mejorar lo que no se mide”: el Balanced Scorecard y los OKR convierten la ejecución en un proceso vivo y corregible." },
+      { t: "Medir únicamente las ventas, porque es lo que realmente importa.", correct:false,
+        fb: "Medir solo lo financiero oculta causas de raíz en clientes, procesos y personas; genera decisiones miopes." }
+    ]
+  }
+];
+
+const POINTS = 10;
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+let currentOptions = [];
+
+const stage = document.getElementById('stage');
+const scoreChip = document.getElementById('scoreChip');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+
+function updateProgress(n){
+  const pct = (n / STEPS.length) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = 'Paso ' + n + ' de ' + STEPS.length;
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function updateScore(){ scoreChip.textContent = 'Puntos: ' + score; }
+
+function renderIntro(){
+  updateProgress(0);
+  stage.classList.remove('fade'); void stage.offsetWidth; stage.classList.add('fade');
+  stage.innerHTML = `
+    <div class="intro">
+      <h2>Pon a prueba tu liderazgo de ejecución</h2>
+      <p>Acabas de formular la estrategia de tu empresa. Ahora debes <b>convertirla en acción real</b> a lo largo de <b>10 decisiones clave</b> de implementación.</p>
+      <p>En cada decisión elegirás la mejor opción (el orden de las respuestas cambia en cada partida). Recibirás retroalimentación inmediata.</p>
+      <ul>
+        <li><span class="ic">◆</span><span>10 decisiones · 10 puntos por acierto · máximo 100.</span></li>
+        <li><span class="ic">◆</span><span>Refuerza: los 8 pasos de Kotter, gestión de la resistencia (ADKAR/Lewin), alineación (7S), liderazgo, medición (BSC/OKR) y cultura.</span></li>
+      </ul>
+      <div style="margin-bottom:22px;">
+        <span class="tag">Kotter</span><span class="tag">Lewin</span><span class="tag">ADKAR</span>
+        <span class="tag">Modelo 7S</span><span class="tag">Liderazgo</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="startBtn">Iniciar el reto</button>
+      </div>
+    </div>`;
+  document.getElementById('startBtn').addEventListener('click', startGame);
+}
+
+function startGame(){
+  current = 0; score = 0; results = [];
+  updateScore();
+  renderStep();
+}
+
+function renderStep(){
+  answered = false;
+  const s = STEPS[current];
+  currentOptions = shuffle(s.options);
+  updateProgress(current);
+
+  const opts = currentOptions.map((o,i)=>`
+    <button class="option" data-index="${i}">
+      <span class="letter">${String.fromCharCode(65+i)}</span>
+      <span>${o.t}</span>
+    </button>`).join('');
+
+  stage.classList.remove('fade'); void stage.offsetWidth; stage.classList.add('fade');
+  stage.innerHTML = `
+    <div class="step-badge">Decisión ${s.step} de ${STEPS.length}</div>
+    <h2 class="step-title">${s.title}</h2>
+    <div class="scenario"><span class="who">${s.who}</span>${s.scenario}</div>
+    <div class="q-label">¿Cuál es la mejor decisión?</div>
+    <div class="options" id="options">${opts}</div>
+    <div class="feedback" id="feedback"></div>
+    <div class="actions" id="actions"></div>`;
+
+  const buttons = stage.querySelectorAll('.option');
+  buttons.forEach(btn=>{
+    btn.addEventListener('click', ()=> choose(parseInt(btn.dataset.index,10), buttons));
+  });
+}
+
+function choose(idx, buttons){
+  if(answered) return;
+  answered = true;
+  const s = STEPS[current];
+  const opt = currentOptions[idx];
+  const fbEl = document.getElementById('feedback');
+  const actionsEl = document.getElementById('actions');
+
+  buttons.forEach((btn,i)=>{
+    btn.disabled = true;
+    if(currentOptions[i].correct){ btn.classList.add('correct-answer'); }
+    else btn.classList.add('faded');
+  });
+
+  if(opt.correct){
+    score += POINTS;
+    updateScore();
+    buttons[idx].classList.add('correct-answer');
+    buttons[idx].classList.remove('faded');
+    fbEl.className = 'feedback ok show';
+    fbEl.innerHTML = `<b>✔ ¡Decisión correcta! (+${POINTS} pts)</b>${opt.fb}`;
+    results.push(true);
+  }else{
+    buttons[idx].classList.remove('faded');
+    buttons[idx].classList.add('wrong-pick');
+    const correctBtn = Array.from(buttons).find(b=>currentOptions[parseInt(b.dataset.index,10)].correct);
+    correctBtn.classList.remove('faded');
+    fbEl.className = 'feedback bad show';
+    fbEl.innerHTML = `<b>✘ No es la mejor opción</b>${opt.fb}`;
+    results.push(false);
+  }
+
+  const isLast = current === STEPS.length - 1;
+  actionsEl.innerHTML = `<button class="btn btn-primary" id="nextBtn">${isLast ? 'Ver resultados' : 'Continuar →'}</button>`;
+  document.getElementById('nextBtn').addEventListener('click', ()=>{
+    if(isLast){ renderResults(); }
+    else { current++; renderStep(); }
+  });
+}
+
+function renderResults(){
+  updateProgress(STEPS.length);
+  const pct = Math.round((score / (STEPS.length*POINTS)) * 100);
+  let rank, trophy, color;
+  if(pct === 100){ rank = 'Líder Transformacional'; trophy = '🏆'; color = '#c8a951'; }
+  else if(pct >= 75){ rank = 'Ejecutor Estratégico'; trophy = '🥇'; color = '#c8a951'; }
+  else if(pct >= 50){ rank = 'Gestor en Camino'; trophy = '🥈'; color = '#1a5276'; }
+  else { rank = 'A reforzar'; trophy = '📚'; color = '#e74c3c'; }
+
+  const recap = STEPS.map((s,i)=>{
+    const ok = results[i];
+    return `<li>
+      <span class="num">Paso ${s.step}</span>
+      <span class="mark ${ok?'ok':'bad'}">${ok?'✔':'✘'}</span>
+      <span>${s.title}</span>
+    </li>`;
+  }).join('');
+
+  stage.classList.remove('fade'); void stage.offsetWidth; stage.classList.add('fade');
+  stage.innerHTML = `
+    <div class="results-head">
+      <div class="trophy">${trophy}</div>
+      <h2>Reto completado</h2>
+      <div class="score-big">${score} / ${STEPS.length*POINTS}</div>
+      <div class="score-sub">Aciertos: ${results.filter(Boolean).length} de ${STEPS.length} · ${pct}%</div>
+      <div class="rank-pill" style="background:${color};color:#fff;">${rank}</div>
+    </div>
+    <ul class="recap">${recap}</ul>
+    <div class="result-actions">
+      <button class="btn btn-primary" id="againBtn">Volver a jugar</button>
+      <button class="btn btn-ghost" id="homeBtn">Inicio</button>
+    </div>`;
+  document.getElementById('againBtn').addEventListener('click', startGame);
+  document.getElementById('homeBtn').addEventListener('click', ()=>{ score=0; updateScore(); renderIntro(); });
+}
+
+/* ---------- Música opcional (Web Audio, sin archivos) ---------- */
+let audioCtx = null, musicPlaying = false, melodyTimer = null;
+const NOTES = [261.63,329.63,392.00,523.25,392.00,329.63,293.66,349.23,440.00,349.23];
+let noteIndex = 0;
+function playNote(){
+  if(!audioCtx || !musicPlaying) return;
+  const osc = audioCtx.createOscillator();
+  const gan = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = NOTES[noteIndex % NOTES.length];
+  gan.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  gan.gain.exponentialRampToValueAtTime(0.07, audioCtx.currentTime + 0.05);
+  gan.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.55);
+  osc.connect(gan); gan.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+  noteIndex++;
+}
+const musicBtn = document.getElementById('musicBtn');
+musicBtn.addEventListener('click', ()=>{
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  if(!musicPlaying){
+    musicPlaying = true;
+    if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    musicBtn.textContent = '🔇 Silenciado';
+    playNote();
+    melodyTimer = setInterval(playNote, 620);
+  }else{
+    musicPlaying = false;
+    musicBtn.textContent = '🎵 Música';
+    clearInterval(melodyTimer);
+  }
+});
+
+renderIntro();
+</script>
+</body>
+</html>
